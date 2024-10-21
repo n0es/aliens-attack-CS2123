@@ -1,13 +1,31 @@
 public class World {
-  int bullets;
+  ILo<Bullet> bullets;
   ILo<Alien> aliens;
+  Ship ship;
 
   int rows = 30;
   int cols = 20;
   int cellSize = 32;
   double tickRate = 0.1;
+  
+  World(ILo<Alien> aliens, ILo<Bullet> bullets, Ship ship) {
+    this.aliens = aliens;
+    this.bullets = bullets;
+    this.ship = ship;
+  }
 
-  World(int lives) {
+  World() {
+    new World(this.generateAliens(3, 10), new MtLo<Bullet>(), new Ship(10, 29));
+  }
+
+  private ILo<Alien> generateAliens(int rows, int cols) {
+    ILo<Alien> aliens = new MtLo<Alien>();
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
+        aliens.add(new Alien(j, i));
+      }
+    }
+    return aliens;
   }
 
   boolean aliensReachedEarth() {
@@ -34,6 +52,5 @@ class ReachedEarth implements IPredicate<Alien> {
 class ExamplesWorld {
   ExamplesWorld() {}
 
-
-  World w = new World(10);
+  World w = new World();
 }
