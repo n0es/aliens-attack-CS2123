@@ -2,7 +2,8 @@ public class MtLo<T> implements ILo<T> {
     MtLo() {
     }
 
-    public void add(T item) {
+    public ConsLo<T> add(T item) {
+        return new ConsLo<T>(item, this);
     }
 
     public T get(int index) {

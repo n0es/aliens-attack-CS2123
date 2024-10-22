@@ -1,5 +1,5 @@
 public interface ILo<T> {
-    void add(T item);
+    ConsLo<T> add(T item);
     T get(int index);
     int size();
     ILo<T> filter(IPredicate<T> pred);
@@ -8,4 +8,3 @@ public interface ILo<T> {
     <R> ILo<R> map(IFunc<T, R> func);
     <Y> Y foldr(IFunc2<T, Y, Y> func, Y base);
 }
-

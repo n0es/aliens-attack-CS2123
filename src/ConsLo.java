@@ -7,8 +7,8 @@ public class ConsLo<T> implements ILo<T> {
         this.rest = rest;
     }
 
-    public void add(T item) {
-        this.rest = new ConsLo<T>(item, this);
+    public ConsLo<T> add(T item) {
+        return new ConsLo<T>(item, this);
     }
 
     public T get(int index) {
