@@ -1,3 +1,3 @@
 public interface IPredicate<T> {
-    boolean apply(T t);
+  boolean apply(T t);
 }

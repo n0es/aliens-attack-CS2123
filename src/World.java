@@ -11,6 +11,8 @@ public class World extends javalib.funworld.World {
   Keys keys;
   int ammo;
   Direction aliensDirection;
+  int alienTickDelay = 20;
+  int alienTick = 0;
 
   int rows = 30;
   int cols = 20;
@@ -27,6 +29,7 @@ public class World extends javalib.funworld.World {
     this.ship = new Ship(10 * this.cellSize, 29 * this.cellSize + cellSize / 2, this.cellSize);
     this.keys = new Keys();
     this.ammo = ammo;
+    this.aliensDirection = new Direction("Right");
   }
 
   World() {
@@ -35,15 +38,17 @@ public class World extends javalib.funworld.World {
     this.ship = new Ship(10 * this.cellSize, 29 * this.cellSize + cellSize / 2, this.cellSize);
     this.keys = new Keys();
     this.ammo = 10;
+    this.aliensDirection = new Direction("Right");
   }
 
-  World(ILo<Alien> aliens, ILo<Bullet> bullets, Ship ship, Keys keys, int ammo, Direction direction) {
+  World(ILo<Alien> aliens, ILo<Bullet> bullets, Ship ship, Keys keys, int ammo, Direction direction, int alienTick) {
     this.aliens = aliens;
     this.bullets = bullets;
     this.ship = ship;
     this.keys = keys;
     this.ammo = ammo;
     this.aliensDirection = direction;
+    this.alienTick = alienTick;
   }
 
 
@@ -143,23 +148,23 @@ public class World extends javalib.funworld.World {
       return this.bullets;
     }
   }
-  TickBullets tickBullets = new TickBullets();
-  TickAliens tickAliens = new TickAliens();
+
   TickShip tickShip = new TickShip(this.cols * this.cellSize);
   public World onTick() {
     return new World(
       aliens.foldr(
-        tickAliens,
+        new TickAliens(this.cols, this.aliensDirection, this.bullets, this.cellSize, this.alienTick),
         new MtLo<Alien>()
       ),
       bullets.foldr(
-        tickBullets,
+        new TickBullets(this.aliens, this.cellSize),
         new MtLo<Bullet>()
       ),
       tickShip.apply(ship.control(keys)),
       keys,
       ammo,
-      aliensDirection
+      new TickDirection(this.cols, 0, this.alienTick).apply(aliensDirection, aliens),
+      (this.alienTick + 1)%this.alienTickDelay
     );
   }
 
@@ -171,7 +176,8 @@ public class World extends javalib.funworld.World {
       this.ship,
       keys.press(key),
       this.ammo,
-      this.aliensDirection
+      this.aliensDirection,
+      this.alienTick
     );
   }
 
@@ -183,7 +189,8 @@ public class World extends javalib.funworld.World {
       this.ship,
       keys.release(key),
       this.ammo,
-      this.aliensDirection
+      this.aliensDirection,
+      this.alienTick
     );
   }
 

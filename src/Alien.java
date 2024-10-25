@@ -1,9 +1,5 @@
 import javalib.funworld.WorldScene;
-import javalib.worldimages.OutlineMode;
-import javalib.worldimages.RectangleImage;
 import javalib.worldimages.WorldImage;
-
-import java.awt.*;
 
 public class Alien {
   int x;
@@ -47,6 +43,34 @@ public class Alien {
   }
 }
 
+class TickAliens implements IFunc2<Alien, ILo<Alien>, ILo<Alien>> {
+  int max;
+  Direction direction;
+  ILo<Bullet> bullets;
+  MoveDirection moveDirection;
+  BulletHitAlien bulletHitAlien;
+  int tick;
+
+  TickAliens(int max, Direction direction, ILo<Bullet> bullets, int cellSize, int tick) {
+    this.max = max;
+    this.direction = direction;
+    this.bullets = bullets;
+    this.moveDirection = new MoveDirection(direction);
+    this.bulletHitAlien = new BulletHitAlien(cellSize);
+    this.tick = tick;
+  }
+
+  public ILo<Alien> apply(Alien a, ILo<Alien> aliens) {
+    if (this.bullets.any(bulletHitAlien, a)) {
+      return aliens;
+    } else if (tick==0) {
+      return new ConsLo<Alien>(moveDirection.apply(a), aliens);
+    } else {
+      return new ConsLo<Alien>(a, aliens);
+    }
+  }
+}
+
 class DrawAliens implements IFunc2<Alien, WorldScene, WorldScene> {
   int cellSize;
   WorldImage image;
@@ -59,35 +83,8 @@ class DrawAliens implements IFunc2<Alien, WorldScene, WorldScene> {
   public WorldScene apply(Alien a, WorldScene scene) {
     return scene.placeImageXY(
       image,
-      a.x * this.cellSize,
-      a.y * this.cellSize
+      a.x * this.cellSize + this.cellSize / 2,
+      a.y * this.cellSize + this.cellSize / 2
     );
-  }
-}
-
-class AlienHitByAnyBullet implements IPredicate2<Alien, ILo<Bullet>> {
-  public boolean apply(Alien alien, ILo<Bullet> bulletList) {
-    return bulletList.any(new BulletHitAlien(), alien);
-  }
-}
-
-class MoveAlienLeft implements IFunc<Alien, Alien>{
-  public Alien apply(Alien alien){
-    return alien.moveLeft();
-  }
-}
-class MoveAlienRight implements IFunc<Alien, Alien>{
-  public Alien apply(Alien alien){
-    return alien.moveRight();
-  }
-}
-class MoveAlienDown implements IFunc<Alien, Alien>{
-  public Alien apply(Alien alien){
-    return alien.moveDown();
-  }
-}
-class MoveAlienUp implements IFunc<Alien, Alien>{
-  public Alien apply(Alien alien){
-    return alien.moveUp();
   }
 }
