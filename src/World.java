@@ -143,7 +143,6 @@ public class World extends javalib.funworld.World {
       return this.bullets;
     }
   }
-
   TickBullets tickBullets = new TickBullets();
   TickAliens tickAliens = new TickAliens();
   TickShip tickShip = new TickShip(this.cols * this.cellSize);
