@@ -25,6 +25,8 @@ class DrawBullets implements IFunc2<Bullet, WorldScene, WorldScene> {
       b.x,
       b.y
     );
+  public boolean collidesWith(Alien alien) {
+    return (this.x == alien.getX()) && (this.y == alien.getY());
   }
 }
 
@@ -38,5 +40,10 @@ class TickBullets implements IFunc2<Bullet, ILo<Bullet>, ILo<Bullet>> {
     } else {
       return bullets;
     }
+  }
+}
+class BulletHitAlien implements IPredicate2<Bullet, Alien>{
+  public boolean apply(Bullet bullet, Alien alien){
+    return (bullet.collidesWith(alien));
   }
 }

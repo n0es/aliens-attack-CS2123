@@ -8,6 +8,7 @@ public class World extends javalib.funworld.World {
   ILo<Bullet> bullets;
   ILo<Alien> aliens;
   Ship ship;
+  Direction direction;
 
   int ammo;
   int rows = 30;
@@ -36,10 +37,11 @@ public class World extends javalib.funworld.World {
     this.ammo = 10;
   }
 
-  World(ILo<Alien> aliens, ILo<Bullet> bullets, Ship ship, Keys keys) {
+  World(ILo<Alien> aliens, ILo<Bullet> bullets, Ship ship, Keys keys, Direction direction) {
     this.aliens = aliens;
     this.bullets = bullets;
     this.ship = ship;
+    this.direction = direction;
     this.keys = keys;
   }
 
@@ -88,6 +90,22 @@ public class World extends javalib.funworld.World {
         y * this.cellSize
       );
     }
+  World() {
+    new World(this.generateAliens(3, 10),
+      new MtLo<Bullet>(),
+      new Ship(10, 29),
+      new Direction("Right"));
+  }
+
+  public World onTick(){
+    return this.updateAliens();
+  }
+  public World updateAliens(){
+    return new World(
+      this.aliens.map(this.direction.Move()).filter(new AlienHitByAnyBullet(), this.bullets),
+      this.bullets,
+      this.ship,
+      this.direction);
   }
 
   public WorldScene drawBackground() {
@@ -208,6 +226,7 @@ class ReachedEarth implements IPredicate<Alien> {
 }
 
 class ExamplesWorld {
+  ExamplesWorld() {}
 
   boolean testBigBang(Tester t) {
     World w = new World();

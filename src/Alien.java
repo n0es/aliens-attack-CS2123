@@ -30,6 +30,14 @@ public class Alien {
     return new Alien(this.x + 1, this.y);
   }
 
+  int getX() {
+    return this.x;
+  }
+
+  int getY() {
+    return this.y;
+  }
+
   boolean reachedY(int y) {
     return this.y >= y;
   }
@@ -54,5 +62,32 @@ class DrawAliens implements IFunc2<Alien, WorldScene, WorldScene> {
       a.x * this.cellSize,
       a.y * this.cellSize
     );
+  }
+}
+
+class AlienHitByAnyBullet implements IPredicate2<Alien, ILo<Bullet>> {
+  public boolean apply(Alien alien, ILo<Bullet> bulletList) {
+    return bulletList.any(new BulletHitAlien(), alien);
+  }
+}
+
+class MoveAlienLeft implements IFunc<Alien, Alien>{
+  public Alien apply(Alien alien){
+    return alien.moveLeft();
+  }
+}
+class MoveAlienRight implements IFunc<Alien, Alien>{
+  public Alien apply(Alien alien){
+    return alien.moveRight();
+  }
+}
+class MoveAlienDown implements IFunc<Alien, Alien>{
+  public Alien apply(Alien alien){
+    return alien.moveDown();
+  }
+}
+class MoveAlienUp implements IFunc<Alien, Alien>{
+  public Alien apply(Alien alien){
+    return alien.moveUp();
   }
 }

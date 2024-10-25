@@ -18,9 +18,15 @@ public class MtLo<T> implements ILo<T> {
         return this;
     }
 
+    public <R> ILo<T> filter(IPredicate2<T, R> pred, R r) {
+        return this;
+    }
+
     public boolean any(IPredicate<T> pred) {
         return false;
     }
+
+    public <R> boolean any(IPredicate2<T, R> pred, R r){return false;}
 
     public boolean all(IPredicate<T> pred) {
         return true;
