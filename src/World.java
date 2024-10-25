@@ -5,24 +5,24 @@ import tester.*;
 import java.awt.*;
 
 public class World extends javalib.funworld.World {
-  ILo<Bullet> bullets;
   ILo<Alien> aliens;
+  ILo<Bullet> bullets;
   Ship ship;
-  Direction direction;
-
+  Keys keys;
   int ammo;
+  Direction aliensDirection;
+
   int rows = 30;
   int cols = 20;
   int cellSize = 24;
   double fps = 60;
-  Keys keys;
 
 
   // Your world must have a constructor that just takes an integer,
   // which represents the number of bullets a player has to shoot.
   // That is how your graders will launch your world.
   World(int ammo) {
-    this.aliens = this.generateAliens(3, 10, 10, 1);
+    this.aliens = this.generateAliens(3, 10);
     this.bullets = new MtLo<Bullet>();
     this.ship = new Ship(10 * this.cellSize, 29 * this.cellSize + cellSize / 2, this.cellSize);
     this.keys = new Keys();
@@ -30,19 +30,20 @@ public class World extends javalib.funworld.World {
   }
 
   World() {
-    this.aliens = this.generateAliens(3, 10, 10, 1);
+    this.aliens = this.generateAliens(3, 10);
     this.bullets = new MtLo<Bullet>();
     this.ship = new Ship(10 * this.cellSize, 29 * this.cellSize + cellSize / 2, this.cellSize);
     this.keys = new Keys();
     this.ammo = 10;
   }
 
-  World(ILo<Alien> aliens, ILo<Bullet> bullets, Ship ship, Keys keys, Direction direction) {
+  World(ILo<Alien> aliens, ILo<Bullet> bullets, Ship ship, Keys keys, int ammo, Direction direction) {
     this.aliens = aliens;
     this.bullets = bullets;
     this.ship = ship;
-    this.direction = direction;
     this.keys = keys;
+    this.ammo = ammo;
+    this.aliensDirection = direction;
   }
 
 
@@ -90,22 +91,6 @@ public class World extends javalib.funworld.World {
         y * this.cellSize
       );
     }
-  World() {
-    new World(this.generateAliens(3, 10),
-      new MtLo<Bullet>(),
-      new Ship(10, 29),
-      new Direction("Right"));
-  }
-
-  public World onTick(){
-    return this.updateAliens();
-  }
-  public World updateAliens(){
-    return new World(
-      this.aliens.map(this.direction.Move()).filter(new AlienHitByAnyBullet(), this.bullets),
-      this.bullets,
-      this.ship,
-      this.direction);
   }
 
   public WorldScene drawBackground() {
@@ -131,6 +116,24 @@ public class World extends javalib.funworld.World {
     );
   }
 
+
+//  TickAlien tickAlien = new TickAlien();
+//  public World updateAliens() {
+//    return new World(
+//      this.aliens.filter(
+//        alienHitByAnyBullet,
+//        this.bullets
+//      ).map(
+//        tickAlien
+//      ),
+//      this.bullets,
+//      this.ship,
+//      this.keys,
+//      this.ammo,
+//      this.aliensDirection
+//    );
+//  }
+
   public ILo<Bullet> handleShoot(String s) {
     if (s.equals(" ") &&
       this.ammo > 0 &&
@@ -142,16 +145,22 @@ public class World extends javalib.funworld.World {
   }
 
   TickBullets tickBullets = new TickBullets();
+  TickAliens tickAliens = new TickAliens();
   TickShip tickShip = new TickShip(this.cols * this.cellSize);
   public World onTick() {
     return new World(
-      aliens,
+      aliens.foldr(
+        tickAliens,
+        new MtLo<Alien>()
+      ),
       bullets.foldr(
         tickBullets,
         new MtLo<Bullet>()
       ),
       tickShip.apply(ship.control(keys)),
-      keys
+      keys,
+      ammo,
+      aliensDirection
     );
   }
 
@@ -161,7 +170,9 @@ public class World extends javalib.funworld.World {
       this.aliens,
       this.handleShoot(key),
       this.ship,
-      keys.press(key)
+      keys.press(key),
+      this.ammo,
+      this.aliensDirection
     );
   }
 
@@ -171,23 +182,15 @@ public class World extends javalib.funworld.World {
       this.aliens,
       this.bullets,
       this.ship,
-      keys.release(key)
+      keys.release(key),
+      this.ammo,
+      this.aliensDirection
     );
   }
 
   public boolean bigBang() {
     return super.bigBang(this.cols * this.cellSize, this.rows * this.cellSize, 1 / this.fps);
   }
-
-//  ILo<Alien> generateAliens(int rows, int cols, int startX, int startY) {
-//    ILo<Alien> aliens = new MtLo<Alien>();
-//    for (int y = rows-1; y >= 0; y--) {
-//      for (int x = cols-1; x >= 0; x--) {
-//        aliens = aliens.add(new Alien(startX + x - Math.floorDiv(cols, 2), startY + y));
-//      }
-//    }
-//    return aliens;
-//  }
 
   ILo<Alien> generateAliens(int rows, int cols, int startX, int startY, int accum) {
     if (accum == rows * cols) {
@@ -200,12 +203,13 @@ public class World extends javalib.funworld.World {
     }
   }
 
-  ILo<Alien> generateAliens(int rows, int cols, int startX, int startY) {
-    return generateAliens(rows, cols, startX, startY, 0);
+  ILo<Alien> generateAliens(int rows, int cols) {
+    return generateAliens(rows, cols, Math.floorDiv(this.cols, 2), 1, 0);
   }
 
+  ReachedEarth reachedEarth = new ReachedEarth(this.rows - 1);
   boolean aliensReachedEarth() {
-    return this.aliens.any(new ReachedEarth(rows - 1));
+    return this.aliens.any(reachedEarth);
   }
 
   boolean gameOver() {
@@ -226,7 +230,8 @@ class ReachedEarth implements IPredicate<Alien> {
 }
 
 class ExamplesWorld {
-  ExamplesWorld() {}
+  ExamplesWorld() {
+  }
 
   boolean testBigBang(Tester t) {
     World w = new World();
@@ -242,7 +247,7 @@ class ExamplesWorld {
   boolean testGenerateAliens(Tester t) {
     World w = new World();
     return t.checkExpect(
-      w.generateAliens(2, 6, 10, 1),
+      w.generateAliens(2, 6),
       new ConsLo<Alien>(
         new Alien(7, 1),
         new ConsLo<Alien>(
