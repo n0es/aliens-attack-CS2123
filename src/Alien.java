@@ -1,3 +1,10 @@
+import javalib.funworld.WorldScene;
+import javalib.worldimages.OutlineMode;
+import javalib.worldimages.RectangleImage;
+import javalib.worldimages.WorldImage;
+
+import java.awt.*;
+
 public class Alien {
   int x;
   int y;
@@ -29,5 +36,23 @@ public class Alien {
 
   boolean collidedWith(Bullet bullet) {
     return this.x == bullet.x && this.y == bullet.y;
+  }
+}
+
+class DrawAliens implements IFunc2<Alien, WorldScene, WorldScene> {
+  int cellSize;
+  WorldImage image;
+
+  DrawAliens(int cellSize) {
+    this.cellSize = cellSize;
+    this.image = new Image(11, 8, "  #     #     #   #     #######   ## ### ## ############ ####### ## #     # #   ## ##   ", cellSize).image;
+  }
+
+  public WorldScene apply(Alien a, WorldScene scene) {
+    return scene.placeImageXY(
+      image,
+      a.x * this.cellSize,
+      a.y * this.cellSize
+    );
   }
 }

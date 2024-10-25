@@ -4,85 +4,74 @@ import javalib.worldimages.*;
 import java.awt.*;
 
 public class Ship {
-  int cellSize;
   int x;
   int y;
   int v;
   int speed = 4;
-  WorldImage image;
 
-  Ship(int x, int y, int v, int cellSize) {
+  Ship(int x, int y, int v) {
     this.x = x;
     this.y = y;
     this.v = v;
-    this.cellSize = cellSize;
-    image = this.shipImage();
   }
 
-  Ship(int x, int y, int cellSize) {
-    this(x, y, 0, cellSize);
+  Ship(int x, int y) {
+    this(x, y, 0);
   }
 
-
-  private WorldImage shipImage() {
-    int w = 11;
-    int h = 8;
-    String image = "  #     #     #   #     #######   ## ### ## ############ ####### ## #     # #   ## ##   ";
-    return this.shipImageHelper(w, h, image);
-  }
-
-  private WorldImage shipImageHelper(int w, int h, String str) {
-    int pixelSize = Math.floorDiv(this.cellSize, Math.max(w, h));
-    return shipImageHelper(
-      new RectangleImage(w * pixelSize, h * pixelSize, OutlineMode.SOLID, new Color(0, 0, 0, 0)),
-      w, h, 0, str,
-      new RectangleImage(pixelSize, pixelSize, OutlineMode.SOLID, Color.RED));
-  }
-
-  private WorldImage shipImageHelper(WorldImage image, int w, int h, int a, String str, RectangleImage pixel) {
-    if (str.length() == a) {
-      return image;
-    }
-    if (str.charAt(a) == '#') {
-      return new OverlayOffsetImage(
-        this.shipImageHelper(image, w, h, a + 1, str, pixel),
-        (a % w * pixel.width) - (w - 1) * Math.floorDiv(pixel.width, 2),
-        (Math.floorDiv(a, w) * pixel.width) - (h - 1) * Math.floorDiv(pixel.width, 2),
-        pixel
-      );
-    }
-    return this.shipImageHelper(image, w, h, a + 1, str, pixel);
-  }
-
-  public WorldScene drawShip(WorldScene scene) {
-    return scene.placeImageXY(
-      this.image,
-      this.x,
-      this.y
-    );
-  }
-
-  Ship moveLeft() {
-    return new Ship(this.x, this.y, -1, this.cellSize);
-  }
-
-  Ship moveRight() {
-    return new Ship(this.x, this.y, 1, this.cellSize);
+  Ship move() {
+    return new Ship(futureX(), y, v);
   }
 
   Ship stop() {
-    return new Ship(this.x, this.y, this.cellSize);
+    return new Ship(x, y);
+  }
+
+  Ship control(Keys k) {
+    if (k.isPressed("left")) {
+      return new Ship(x, y, -1);
+    } else if (k.isPressed("right")) {
+      return new Ship(x, y, 1);
+    } else {
+      return new Ship(x, y, 0);
+    }
   }
 
   int futureX() {
     return this.x + (this.v * this.speed);
   }
+}
 
-  Ship tick(int max) {
-    if (this.futureX() > 0 && this.futureX() < max) {
-      return new Ship(this.futureX(), this.y, this.v, this.cellSize);
+class TickShip implements IFunc<Ship, Ship> {
+  int max;
+
+  TickShip(int max) {
+    this.max = max;
+  }
+
+  public Ship apply(Ship s) {
+    if (s.futureX() > 0 && s.futureX() < max) {
+      return s.move();
     } else {
-      return this.stop();
+      return s.stop();
     }
+  }
+}
+
+class DrawShip implements IFunc2<Ship, WorldScene, WorldScene> {
+  int cellSize;
+  WorldImage image;
+
+  DrawShip(int cellSize) {
+    this.cellSize = cellSize;
+    this.image = new Image(3, 3, " # #### #", cellSize).image;
+  }
+
+  public WorldScene apply(Ship s, WorldScene scene) {
+    return scene.placeImageXY(
+      image,
+      s.x,
+      s.y
+    );
   }
 }
