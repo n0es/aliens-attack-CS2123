@@ -20,26 +20,32 @@ public class Bullet {
     return this.y;
   }
 
-  public boolean collidesWith(Alien alien) {
-    return (this.x == alien.getX()) && (this.y == alien.getY());
-  }
-
-  public double distanceFrom(Alien alien, int cellSize) {
-    return Math.sqrt(
-      Math.pow(this.x - alien.getX()*cellSize, 2) +
-      Math.pow(this.y - alien.getY()*cellSize, 2)
-    );
+  public BoundingBox getBounds(int cellSize) {
+    int bulletWidth = Math.max(2, cellSize / 4);
+    int bulletHeight = cellSize/2;
+    return new BoundingBox(x - bulletWidth / 2, y - bulletHeight / 2, bulletWidth, bulletHeight);
   }
 }
 
 class DrawBullets implements IFunc2<Bullet, WorldScene, WorldScene> {
-  WorldImage bulletImage = new RectangleImage(4, 12, OutlineMode.SOLID, Color.RED);
+  WorldImage bulletImage;
+
+  // Constructor now accepts cellSize
+  DrawBullets(int cellSize) {
+    this.bulletImage = new RectangleImage(
+            Math.max(2, cellSize / 4),
+            cellSize/2,
+            OutlineMode.SOLID,
+            Color.RED
+    );
+  }
 
   public WorldScene apply(Bullet b, WorldScene scene) {
+    // Position the bullet based on cellSize
     return scene.placeImageXY(
-      bulletImage,
-      b.x,
-      b.y
+            bulletImage,
+            b.x,
+            b.y
     );
   }
 }
@@ -73,7 +79,7 @@ class BulletHitAlien implements IPredicate2<Bullet, Alien> {
   }
 
   public boolean apply(Bullet bullet, Alien alien) {
-    return bullet.distanceFrom(alien, cellSize) < cellSize;
+    return bullet.getBounds(cellSize).intersects(alien.getBounds(cellSize));
   }
 }
 
@@ -85,6 +91,6 @@ class AlienHitBullet implements IPredicate2<Alien, Bullet> {
   }
 
   public boolean apply(Alien alien, Bullet bullet) {
-    return bullet.distanceFrom(alien, cellSize) < Math.floorDiv(cellSize, 2);
+    return alien.getBounds(cellSize).intersects(bullet.getBounds(cellSize));
   }
 }

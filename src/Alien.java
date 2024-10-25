@@ -38,8 +38,10 @@ public class Alien {
     return this.y >= y;
   }
 
-  boolean collidedWith(Bullet bullet) {
-    return this.x == bullet.x && this.y == bullet.y;
+  public BoundingBox getBounds(int cellSize) {
+    int pixelX = this.x * cellSize;
+    int pixelY = this.y * cellSize;
+    return new BoundingBox(pixelX - cellSize / 2, pixelY - cellSize / 2, cellSize, cellSize);
   }
 }
 

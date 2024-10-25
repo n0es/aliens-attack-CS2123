@@ -58,7 +58,7 @@ public class World extends javalib.funworld.World {
     return this.drawShip.apply(this.ship, scene);
   }
 
-  DrawBullets drawBullets = new DrawBullets();
+  DrawBullets drawBullets = new DrawBullets(cellSize);
 
   public WorldScene drawBullets(WorldScene scene) {
     return this.bullets.foldr(
