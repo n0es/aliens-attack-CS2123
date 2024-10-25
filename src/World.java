@@ -4,7 +4,7 @@ import tester.*;
 
 import java.awt.*;
 
-public class MyWorld extends World {
+public class World extends javalib.funworld.World {
   ILo<Bullet> bullets;
   ILo<Alien> aliens;
   Ship ship;
@@ -12,19 +12,19 @@ public class MyWorld extends World {
   int rows = 30;
   int cols = 20;
   int cellSize = 24;
-  double fps = 60;
+  double fps = 30;
 
 
   // Your world must have a constructor that just takes an integer,
   // which represents the number of bullets a player has to shoot.
   // That is how your graders will launch your world.
-  MyWorld(ILo<Alien> aliens, ILo<Bullet> bullets, Ship ship) {
+  World(ILo<Alien> aliens, ILo<Bullet> bullets, Ship ship) {
     this.aliens = aliens;
     this.bullets = bullets;
     this.ship = ship;
   }
 
-  MyWorld() {
+  World() {
     this.aliens = this.generateAliens(3, 10);
     this.bullets = new MtLo<Bullet>();
     this.ship = new Ship(10*this.cellSize, 29*this.cellSize+cellSize/2, this.cellSize);
@@ -125,8 +125,8 @@ public class MyWorld extends World {
   }
 
   TickBullets tickBullets = new TickBullets();
-  public MyWorld onTick() {
-      return new MyWorld(
+  public World onTick() {
+      return new World(
         this.aliens,
         this.bullets.foldr(
           tickBullets,
@@ -137,14 +137,14 @@ public class MyWorld extends World {
   }
 
   @Override
-  public World onKeyEvent(String key) {
+  public javalib.funworld.World onKeyEvent(String key) {
     System.out.println(key);
-    return new MyWorld(this.aliens, this.handleShoot(key), this.moveShip(key));
+    return new World(this.aliens, this.handleShoot(key), this.moveShip(key));
   }
 
   @Override
-  public World onKeyReleased(String key) {
-    return new MyWorld(this.aliens, this.bullets, this.stopShip(key));
+  public javalib.funworld.World onKeyReleased(String key) {
+    return new World(this.aliens, this.bullets, this.stopShip(key));
   }
 
   public boolean bigBang() {
@@ -191,13 +191,13 @@ class ExamplesWorld {
   }
 
   boolean testBigBang(Tester t) {
-    MyWorld w = new MyWorld();
+    World w = new World();
     System.out.println(w.ship);
     return w.bigBang();
   }
 
   boolean testShip(Tester t) {
-    MyWorld w = new MyWorld();
+    World w = new World();
     return t.checkExpect(w.ship, new Ship(10, 29, 24));
   }
 }
