@@ -1,8 +1,8 @@
 <component name="libraryTable">
   <library name="javalib">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../IntelliJJars/javalib.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../IntelliJJars/tester.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../IntelliJJARS/javalib.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../IntelliJJARS/tester.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

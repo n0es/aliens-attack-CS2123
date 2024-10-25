@@ -7,8 +7,8 @@ public class ConsLo<T> implements ILo<T> {
         this.rest = rest;
     }
 
-    public void add(T item) {
-        this.rest = new ConsLo<T>(item, this);
+    public ConsLo<T> add(T item) {
+        return new ConsLo<T>(item, this);
     }
 
     public T get(int index) {
@@ -31,8 +31,20 @@ public class ConsLo<T> implements ILo<T> {
         }
     }
 
+    public <R> ILo<T> filter(IPredicate2<T, R> pred, R r) {
+        if (pred.apply(this.first, r)) {
+            return new ConsLo<T>(this.first, this.rest.filter(pred, r));
+        }else{
+            return this.rest.filter(pred, r);
+        }
+    }
+
     public boolean any(IPredicate<T> pred) {
         return pred.apply(this.first) || this.rest.any(pred);
+    }
+
+    public <R> boolean any(IPredicate2<T, R> pred, R r) {
+        return pred.apply(this.first, r ) || this.rest.any(pred, r);
     }
 
     public boolean all(IPredicate<T> pred) {

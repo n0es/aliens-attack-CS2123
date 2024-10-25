@@ -1,21 +1,39 @@
+import javalib.*;
+import tester.*;
 public class World {
-  ILo<Bullet> bullets;
   ILo<Alien> aliens;
+  ILo<Bullet> bullets;
   Ship ship;
+  Direction direction;
 
   int rows = 30;
   int cols = 20;
   int cellSize = 32;
   double tickRate = 0.1;
   
-  World(ILo<Alien> aliens, ILo<Bullet> bullets, Ship ship) {
+  World(ILo<Alien> aliens, ILo<Bullet> bullets, Ship ship, Direction direction) {
     this.aliens = aliens;
     this.bullets = bullets;
     this.ship = ship;
+    this.direction = direction;
   }
 
   World() {
-    new World(this.generateAliens(3, 10), new MtLo<Bullet>(), new Ship(10, 29));
+    new World(this.generateAliens(3, 10),
+      new MtLo<Bullet>(),
+      new Ship(10, 29),
+      new Direction("Right"));
+  }
+
+  public World onTick(){
+    return this.updateAliens();
+  }
+  public World updateAliens(){
+    return new World(
+      this.aliens.map(this.direction.Move()).filter(new AlienHitByAnyBullet(), this.bullets),
+      this.bullets,
+      this.ship,
+      this.direction);
   }
 
   private ILo<Alien> generateAliens(int rows, int cols) {
