@@ -10,6 +10,7 @@ public class World extends javalib.funworld.World {
   Ship ship;
   Keys keys;
   int ammo;
+  int score;
   Direction aliensDirection;
   Direction previousAliensDirection;
   int alienTickDelay = 20;
@@ -39,17 +40,18 @@ public class World extends javalib.funworld.World {
     this.bullets = new MtLo<Bullet>();
     this.ship = new Ship(10 * this.cellSize, 29 * this.cellSize + cellSize / 2, this.cellSize);
     this.keys = new Keys();
-    this.ammo = 10;
+    this.ammo = 60;
     this.aliensDirection = new Direction("Right");
     this.previousAliensDirection = new Direction("Right");
   }
 
-  World(ILo<Alien> aliens, ILo<Bullet> bullets, Ship ship, Keys keys, int ammo, Direction direction, int alienTick) {
+  World(ILo<Alien> aliens, ILo<Bullet> bullets, Ship ship, Keys keys, int ammo, int score, Direction direction, int alienTick) {
     this.aliens = aliens;
     this.bullets = bullets;
     this.ship = ship;
     this.keys = keys;
     this.ammo = ammo;
+    this.score = score;
     this.aliensDirection = direction;
     this.previousAliensDirection = direction;
     this.alienTick = alienTick;
@@ -125,96 +127,139 @@ public class World extends javalib.funworld.World {
     );
   }
 
+  public WorldScene drawAmmo(WorldScene scene) {
+    return scene.placeImageXY(
+      new OverlayImage(
+        new TextImage("Ammo: " + this.ammo, cellSize/2, Color.BLACK),
+        new RectangleImage(
+          4 * this.cellSize,
+          this.cellSize,
+          OutlineMode.SOLID,
+          Color.WHITE
+        )
+      ),
+      this.cellSize * 2,
+      this.cellSize/2
+    );
+  }
+
+  public WorldScene drawScore(WorldScene scene) {
+    return scene.placeImageXY(
+      new OverlayImage(
+        new TextImage("Score: " + this.score, cellSize/2, Color.BLACK),
+        new RectangleImage(
+          4 * this.cellSize,
+          this.cellSize,
+          OutlineMode.SOLID,
+          Color.WHITE
+        )
+      ),
+      this.cols * this.cellSize - this.cellSize * 2,
+      this.cellSize/2
+    );
+  }
+
+  public WorldScene drawTitle(WorldScene scene) {
+    return scene.placeImageXY(
+      new OverlayImage(
+        new TextImage("Aliens Attack", cellSize/2, Color.BLACK),
+        new RectangleImage(
+          8 * this.cellSize,
+          this.cellSize,
+          OutlineMode.SOLID,
+          Color.WHITE
+        )
+      ),
+      this.cols * this.cellSize / 2,
+      this.cellSize/2
+    );
+  }
+
   public WorldScene makeScene() {
-    return drawBoundingBoxes(
-      drawAliens(
-        drawBullets(
-          drawShip(
-            drawBackground(true)
+    return drawTitle(
+      drawScore(
+        drawAmmo(
+          drawAliens(
+            drawBullets(
+              drawShip(
+                drawBackground(true)
+              )
+            )
           )
         )
       )
     );
   }
 
-
-//  TickAlien tickAlien = new TickAlien();
-//  public World updateAliens() {
-//    return new World(
-//      this.aliens.filter(
-//        alienHitByAnyBullet,
-//        this.bullets
-//      ).map(
-//        tickAlien
-//      ),
-//      this.bullets,
-//      this.ship,
-//      this.keys,
-//      this.ammo,
-//      this.aliensDirection
-//    );
-//  }
-
-  public ILo<Bullet> handleShoot(String s) {
-    if (s.equals(" ") &&
-      this.ammo > 0 &&
-      !this.keys.isPressed(" ")) {
-      return this.bullets.add(new Bullet(this.ship.x, this.ship.y));
-    } else {
-      return this.bullets;
-    }
-  }
-
   TickShip tickShip = new TickShip(this.cols * this.cellSize);
   public World onTick() {
+    ILo<Alien> newAliens = this.aliens.foldr(
+      new TickAliens(this),
+      new MtLo<Alien>()
+    );
+    ILo<Bullet> newBullets = this.bullets.foldr(
+      new TickBullets(this.aliens, this.cellSize),
+      new MtLo<Bullet>()
+    );
+    int newScore = (this.aliens.size() - newAliens.size()) * 50;
     return new World(
-      aliens.foldr(
-        new TickAliens(this),
-        new MtLo<Alien>()
-      ),
-      bullets.foldr(
-        new TickBullets(this.aliens, this.cellSize),
-        new MtLo<Bullet>()
-      ),
+      newAliens,
+      newBullets,
       tickShip.apply(ship.control(keys)),
       keys,
       ammo,
+      score + newScore,
       new TickDirection(this.cols, 0, this.alienTick).apply(aliensDirection, aliens),
       (this.alienTick + 1)%this.alienTickDelay
     );
   }
 
-  @Override
-  public javalib.funworld.World onKeyEvent(String key) {
-    return new World(
-      this.aliens,
-      this.handleShoot(key),
-      this.ship,
-      keys.press(key),
-      this.ammo,
-      this.aliensDirection,
-      this.alienTick
-    );
+  public World onKeyEvent(String key) {
+    if (key.equals(" ") &&
+      this.ammo > 0 &&
+      !this.keys.isPressed(" ")) {
+      return new World(
+        this.aliens,
+        this.bullets.add(new Bullet(this.ship.x, this.ship.y)),
+        this.ship,
+        this.keys.press(key),
+        this.ammo - 1,
+        this.score,
+        this.aliensDirection,
+        this.alienTick
+      );
+    } else {
+      return new World(
+        this.aliens,
+        this.bullets,
+        this.ship,
+        this.keys.press(key),
+        this.ammo,
+        this.score,
+        this.aliensDirection,
+        this.alienTick
+      );
+    }
   }
 
-  @Override
-  public javalib.funworld.World onKeyReleased(String key) {
+  public World onKeyReleased(String key) {
     return new World(
       this.aliens,
       this.bullets,
       this.ship,
       keys.release(key),
       this.ammo,
+      this.score,
       this.aliensDirection,
       this.alienTick
     );
   }
 
-  public boolean bigBang() {
+  boolean bigBang() {
     return super.bigBang(this.cols * this.cellSize, this.rows * this.cellSize, 1 / this.fps);
   }
 
-public WorldScene gameOverScene() {
+  WorldScene gameOverScene() {
     return this.makeScene().placeImageXY(
       new OverlayImage(
         new TextImage("Game Over", 24, Color.RED),
@@ -230,7 +275,7 @@ public WorldScene gameOverScene() {
     );
   }
 
-  public WorldScene gameWonScene() {
+  WorldScene gameWonScene() {
     return this.makeScene().placeImageXY(
       new OverlayImage(
         new TextImage("You Win!", 24, Color.GREEN),
@@ -305,10 +350,6 @@ class ExamplesWorld {
     World w = new World();
     System.out.println(w.ship);
     return w.bigBang();
-  }
-
-  boolean testIntDivision(Tester t) {
-    return t.checkExpect(3 / 11, 0);
   }
 
 
