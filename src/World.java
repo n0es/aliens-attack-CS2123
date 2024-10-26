@@ -11,6 +11,7 @@ public class World extends javalib.funworld.World {
   Keys keys;
   int ammo;
   Direction aliensDirection;
+  Direction previousAliensDirection;
   int alienTickDelay = 20;
   int alienTick = 0;
 
@@ -30,6 +31,7 @@ public class World extends javalib.funworld.World {
     this.keys = new Keys();
     this.ammo = ammo;
     this.aliensDirection = new Direction("Right");
+    this.previousAliensDirection = new Direction("Right");
   }
 
   World() {
@@ -39,6 +41,7 @@ public class World extends javalib.funworld.World {
     this.keys = new Keys();
     this.ammo = 10;
     this.aliensDirection = new Direction("Right");
+    this.previousAliensDirection = new Direction("Right");
   }
 
   World(ILo<Alien> aliens, ILo<Bullet> bullets, Ship ship, Keys keys, int ammo, Direction direction, int alienTick) {
@@ -48,6 +51,7 @@ public class World extends javalib.funworld.World {
     this.keys = keys;
     this.ammo = ammo;
     this.aliensDirection = direction;
+    this.previousAliensDirection = direction;
     this.alienTick = alienTick;
   }
 
@@ -111,11 +115,23 @@ public class World extends javalib.funworld.World {
     );
   }
 
+  public WorldScene drawBoundingBoxes(WorldScene scene) {
+    return this.bullets.foldr(
+      (Bullet b, WorldScene s) -> b.getBounds(this.cellSize).draw(s),
+      this.aliens.foldr(
+        (Alien a, WorldScene s) -> a.getBounds(this.cellSize).draw(s),
+        this.ship.getBounds(this.cellSize).draw(scene)
+      )
+    );
+  }
+
   public WorldScene makeScene() {
-    return drawAliens(
-      drawBullets(
-        drawShip(
-          drawBackground(true)
+    return drawBoundingBoxes(
+      drawAliens(
+        drawBullets(
+          drawShip(
+            drawBackground(true)
+          )
         )
       )
     );
@@ -153,7 +169,7 @@ public class World extends javalib.funworld.World {
   public World onTick() {
     return new World(
       aliens.foldr(
-        new TickAliens(this.cols, this.aliensDirection, this.bullets, this.cellSize, this.alienTick),
+        new TickAliens(this),
         new MtLo<Alien>()
       ),
       bullets.foldr(
@@ -198,6 +214,48 @@ public class World extends javalib.funworld.World {
     return super.bigBang(this.cols * this.cellSize, this.rows * this.cellSize, 1 / this.fps);
   }
 
+public WorldScene gameOverScene() {
+    return this.makeScene().placeImageXY(
+      new OverlayImage(
+        new TextImage("Game Over", 24, Color.RED),
+        new RectangleImage(
+          6 * this.cellSize,
+          2 * this.cellSize,
+          OutlineMode.SOLID,
+          Color.WHITE
+        )
+      ),
+      this.cols * this.cellSize / 2,
+      this.rows * this.cellSize / 2
+    );
+  }
+
+  public WorldScene gameWonScene() {
+    return this.makeScene().placeImageXY(
+      new OverlayImage(
+        new TextImage("You Win!", 24, Color.GREEN),
+        new RectangleImage(
+          6 * this.cellSize,
+          2 * this.cellSize,
+          OutlineMode.SOLID,
+          Color.WHITE
+        )
+      ),
+      this.cols * this.cellSize / 2,
+      this.rows * this.cellSize / 2
+    );
+  }
+
+  public WorldEnd worldEnds() {
+    if (gameOver()) {
+      return new WorldEnd(true, this.gameOverScene());
+    } else if (gameWon()) {
+      return new WorldEnd(true, this.gameWonScene());
+    } else {
+      return new WorldEnd(false, this.makeScene());
+    }
+  }
+
   ILo<Alien> generateAliens(int rows, int cols, int startX, int startY, int accum) {
     if (accum == rows * cols) {
       return new MtLo<Alien>();
@@ -220,6 +278,10 @@ public class World extends javalib.funworld.World {
 
   boolean gameOver() {
     return this.aliensReachedEarth();
+  }
+
+  boolean gameWon() {
+    return this.aliens.size() == 0;
   }
 }
 

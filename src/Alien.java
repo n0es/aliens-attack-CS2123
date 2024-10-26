@@ -41,7 +41,7 @@ public class Alien {
   public BoundingBox getBounds(int cellSize) {
     int pixelX = this.x * cellSize;
     int pixelY = this.y * cellSize;
-    return new BoundingBox(pixelX - cellSize / 2, pixelY - cellSize / 2, cellSize, cellSize);
+    return new BoundingBox(pixelX, pixelY, cellSize, cellSize);
   }
 }
 
@@ -53,13 +53,13 @@ class TickAliens implements IFunc2<Alien, ILo<Alien>, ILo<Alien>> {
   BulletHitAlien bulletHitAlien;
   int tick;
 
-  TickAliens(int max, Direction direction, ILo<Bullet> bullets, int cellSize, int tick) {
-    this.max = max;
-    this.direction = direction;
-    this.bullets = bullets;
+  TickAliens(World world) {
+    this.max = world.cols;
+    this.direction = world.aliensDirection;
+    this.bullets = world.bullets;
     this.moveDirection = new MoveDirection(direction);
-    this.bulletHitAlien = new BulletHitAlien(cellSize);
-    this.tick = tick;
+    this.bulletHitAlien = new BulletHitAlien(world.cellSize);
+    this.tick = world.alienTick;
   }
 
   public ILo<Alien> apply(Alien a, ILo<Alien> aliens) {

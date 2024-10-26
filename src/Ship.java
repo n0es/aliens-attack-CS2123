@@ -40,6 +40,10 @@ public class Ship {
   int futureX() {
     return this.x + (this.v * this.speed);
   }
+
+  BoundingBox getBounds(int cellSize) {
+    return new BoundingBox(x - cellSize / 2, y - cellSize / 2, cellSize, cellSize);
+  }
 }
 
 class TickShip implements IFunc<Ship, Ship> {
